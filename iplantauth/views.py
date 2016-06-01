@@ -7,8 +7,11 @@ import uuid
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login as django_login
+from django.contrib import auth
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, HttpResponseRedirect
+
+from urllib import quote
 
 import logging
 logger = logging.getLogger(__name__)
@@ -287,3 +290,27 @@ def auth_response(request):
 
     auth_user_token.save()
     return response
+
+
+def shibboleth_login(request):
+    """
+    View to redirect the current request to the shibboleth server, with the 'target' parameter set to the value
+    from "next"
+    """
+    redirect_field_name = "next"
+    login = getattr(settings, 'SHIBBOLETH_LOGIN_URL', None) + '?target=%s' % quote(request.GET.get(redirect_field_name))
+    return HttpResponseRedirect(login)
+
+
+def shibboleth_logout(request):
+    """
+    Log the user out. This means a full logout from shibboleth. There is no such thing as logging out from the
+    service, but staying logged into shibboleth. It is single-sign on. Either you're signed in to all, or not.
+    """
+    redirect_field_name = "next"
+    auth.logout(request)
+    target = getattr(settings, 'SHIBBOLETH_LOGOUT_REDIRECT_URL', None) or\
+             quote(request.GET.get(redirect_field_name)) or\
+             quote(request.build_absolute_uri())
+    logout = getattr(settings, 'SHIBBOLETH_LOGOUT_URL', None) + '?target=%s' % target
+    return HttpResponseRedirect(logout)

@@ -30,5 +30,8 @@ urlpatterns = patterns(
     # CAS + SAML Validation
     url(r'^s_serviceValidater$',
         'iplantauth.protocol.cas.saml_validateTicket',
-        name="saml-service-validate-link")
+        name="saml-service-validate-link"),
+    # Shibboleth
+    url(r'^shibboleth_login$', 'iplantauth.views.shibboleth_login'),
+    url(r'^shibboleth_logout$', 'iplantauth.views.shibboleth_logout'),
 )
