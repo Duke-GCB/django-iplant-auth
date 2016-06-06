@@ -16,6 +16,7 @@ from .protocol.globus import (
     globus_validate_code, _extract_first_last_name,
     globus_profile_for_token,
     create_user_token_from_globus_profile)
+from .protocol.oauth2 import oauth2_profile_for_token
 from caslib import OAuthClient as CAS_OAuthClient
 #From troposphere
 import ldap
@@ -290,6 +291,38 @@ class MockLoginBackend(authentication.BaseAuthentication):
             'email': '%s@iplantcollaborative.org' % settings.ALWAYS_AUTH_USER,
             'entitlement': []
         })
+
+    def get_user(self, user_id):
+        """
+        Get a User object from the username.
+        """
+        User = get_user_model()
+        try:
+            return User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return None
+
+class OAuth2LoginBackend(object):
+    """
+    OAuth2 Authentication Backend
+
+    Exchanges an access_token for a user, creates if does not exist
+    """
+
+    def authenticate(self, key=None):
+        user_token = None
+        try:
+            # Tries to find the user token by the
+            user_token = Token.objects.get(key=key)
+        except Token.DoesNotExist:
+            # Get user details via their oauth2 token
+            user_profile = oauth2_profile_for_token(key)
+            # Create a local token from the profile details and the oauth2 token
+            user_token = create_user_token_from_oauth2_profile(user_profile, key)
+        if not user_token:
+            return None
+        user = user_token.user
+        return user
 
     def get_user(self, user_id):
         """

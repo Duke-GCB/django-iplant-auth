@@ -1,5 +1,7 @@
 import requests
+
 from django.http import HttpResponseRedirect
+from django.utils import timezone
 
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.client import Error as OAuthError
@@ -29,15 +31,18 @@ def oauth2_logout(redirect_uri, redirect_name):
     # TODO: Implement logout
     return None
 
+def _get_state():
+    return 'abec00c92b3499501fcbaace639579a0dd09d7ff'
+
 def oauth2_authorize():
     flow = _oauth2_initFlow()
-    auth_uri = flow.step1_get_authorize_url()
+    auth_uri = flow.step1_get_authorize_url(state=_get_state())
     return HttpResponseRedirect(auth_uri)
 
-def _user_profile_for_token(token):
+def oauth2_profile_for_token(token):
     resource_url = 'https://oauth.oit.duke.edu/oauth/resource'
     try:
-        resource = requests.get(resource_url, params={'access_token':user_access_token}).json()
+        resource = requests.get(resource_url, params={'access_token':token}).json()
     except requests.RequestException as err:
         logger.exception("Error getting user resource with access token", err)
     username = resource['eppn']
@@ -83,8 +88,44 @@ def oauth2_validate_code(request):
     user_access_token = credentials.access_token
     # TODO: Save the refresh token and implement refresh.
     expiry_date = credentials.token_expiry
-    user_profile = _user_profile_for_token(user_access_token)
+    user_profile = oauth2_profile_for_token(user_access_token)
     _ = get_or_create_user(user_profile['username'], user_profile)
     auth_token = create_token(user_profile['username'], user_access_token, expiry_date, None) # issuer = None
     return auth_token
+
+def _extract_expiry_date(epoch_secs):
+    if type(epoch_secs) != int:
+        try:
+            epoch_secs = int(epoch_secs)
+        except:
+            logger.exception("Expected date to be an integer (Seconds from epoch). This method should be modified to the new use case for globus 'exp'")
+            return None
+    epoch = timezone.datetime(month=1, day=1, year=1970)
+    return epoch + timezone.timedelta(seconds=epoch_secs)
+
+
+def create_user_token_from_oauth2_profile(profile, access_token):
+    logger.info(profile)
+    expiry = profile['exp'] # This is an 'epoch-int'
+    expiry = _extract_expiry_date(expiry)
+    issued_at = profile['iat']
+    raw_username = profile['username']  # username@login_auth.com
+    raw_name = profile['name']
+    email = profile['email']
+    username = raw_username
+    # TODO: Get real email/first/last
+
+    # TODO: why is this distinct from oauth2_profile_for_token?
+    # These should be refactored together
+
+    first_name, last_name = ('','')
+    profile_dict = {
+        'username':username,
+        'firstName':first_name,
+        'lastName':last_name,
+        'email': email,
+    }
+    user = get_or_create_user(username, profile_dict)
+    user_token = create_token(user.username, access_token, expiry)
+    return user_token
 
