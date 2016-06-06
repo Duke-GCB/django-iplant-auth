@@ -20,6 +20,8 @@ DEFAULTS =  {
     "CAS_SERVER": None,
     "API_SERVER_URL": None,
     "LOGOUT_REDIRECT_URL": None,
+    "CAS_AUTH_PREFIX": None,
+
     # OAUTH
     "OAUTH_CLIENT_KEY": None,
     "OAUTH_CLIENT_SECRET": None,
