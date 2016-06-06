@@ -37,6 +37,15 @@ DEFAULTS =  {
     "GLOBUS_TOKENINFO_URL": None,
     "GLOBUS_TOKEN_URL": None,
     "GLOBUS_AUTH_URL": None,
+
+    #Duke OAuth2
+    "OAUTH2_REDIRECT_URI": None,
+    "OAUTH2_CLIENT_ID": None,
+    "OAUTH2_CLIENT_SECRET": None,
+    "OAUTH2_AUTHORIZE_URI": None,
+    "OAUTH2_TOKEN_URI": None,
+    "OAUTH2_SCOPE": None,
+
 }
 
 

@@ -17,6 +17,7 @@ from .models import create_token, userCanEmulate
 from .models import Token as AuthToken
 from .protocol.cas import cas_validateUser, cas_loginRedirect, get_cas_oauth_client
 from .protocol.globus import globus_logout, globus_authorize, globus_validate_code
+from .protocol.oauth2 import oauth2_authorize, oauth2_validate_code
 from .protocol.ldap import ldap_validate
 from .settings import auth_settings
 
@@ -287,3 +288,21 @@ def auth_response(request):
 
     auth_user_token.save()
     return response
+
+# OAuth2 (Duke)
+
+def oauth2_login_redirect(request):
+    return oauth2_authorize()
+
+def oauth2_callback_authorize(request):
+    user_token = oauth2_validate_code(request)
+    if not user_token:
+        return HttpResponseRedirect(auth_settings.LOGOUT_REDIRECT_URL)
+    user = authenticate(key=user_token.key)
+    django_login(request, user)
+    # Apply newly created AuthToken to session
+    request.session['username'] = user_token.user.username
+    request.session['access_token'] = user_token.key
+    # Redirect to 'next'
+    next_url = request.session.get('next', '/application')
+    return HttpResponseRedirect(next_url)

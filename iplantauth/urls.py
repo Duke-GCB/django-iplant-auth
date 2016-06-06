@@ -9,7 +9,7 @@ urlpatterns = patterns(
     '',
     url(r'^o_login$', 'iplantauth.views.o_login_redirect'),
     # OAuth Authentication Section:
-    url(r'^oauth2.0/callbackAuthorize$', 'iplantauth.views.o_callback_authorize'),
+    # url(r'^oauth2.0/callbackAuthorize$', 'iplantauth.views.o_callback_authorize'),
     # GLOBUS Authentication Section:
     url(r'^globus_login$', 'iplantauth.views.globus_login_redirect'),
 
@@ -30,5 +30,12 @@ urlpatterns = patterns(
     # CAS + SAML Validation
     url(r'^s_serviceValidater$',
         'iplantauth.protocol.cas.saml_validateTicket',
-        name="saml-service-validate-link")
+        name="saml-service-validate-link"),
+
+    # OAuth2 (Duke)
+    url(r'oauth2_login', 'iplantauth.views.oauth2_login_redirect'),
+    url(r'oauth2_callback_authorize', 'iplantauth.views.oauth2_callback_authorize'),
+    url(r'^oauth2.0/callbackAuthorize$', 'iplantauth.views.oauth2_callback_authorize'), # I registered this with OIT wrongly
+
+
 )
