@@ -31,6 +31,7 @@ def _get_state():
     return 'abec00c92b3499501fcbaace639579a0dd09d7ff' #TODO: make dynamic and track
 
 def oauth2_authorize():
+    logger.info("Starting OAuth2 authorize")
     flow = _oauth2_initFlow()
     auth_uri = flow.step1_get_authorize_url(state=_get_state())
     return HttpResponseRedirect(auth_uri)
@@ -60,12 +61,15 @@ def oauth2_profile_for_token(token):
     return user_profile
 
 def oauth2_validate_code(request):
+    logger.info("Validating OAuth2 code")
     code = request.GET['code']
     if not code:
+        logger.error("Code not present in request")
         return None
     flow = _oauth2_initFlow()
     try:
         # Exchange the code for credentials
+        logger.info("Exchanging credentials for code '%s'" % code)
         credentials = flow.step2_exchange(code)
         logger.info(credentials.__dict__)
     except OAuthError as err:
