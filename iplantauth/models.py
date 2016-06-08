@@ -237,3 +237,6 @@ def userCanEmulate(username):
     except User.DoesNotExist:
         return False
 
+
+def destroy_tokens(username):
+    Token.objects.filter(user__username=username).delete()

@@ -7,7 +7,7 @@ from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.client import Error as OAuthError
 from base64 import b64encode
 from iplantauth.models import (
-    get_or_create_user, create_token,)
+    get_or_create_user, create_token, destroy_tokens)
 from iplantauth.settings import auth_settings
 import logging
 logger = logging.getLogger(__name__)
@@ -27,12 +27,8 @@ def _oauth2_initFlow():
         token_uri=auth_settings.OAUTH2_TOKEN_URI)
     return flow
 
-def oauth2_logout(redirect_uri, redirect_name):
-    # TODO: Implement logout
-    return None
-
 def _get_state():
-    return 'abec00c92b3499501fcbaace639579a0dd09d7ff'
+    return 'abec00c92b3499501fcbaace639579a0dd09d7ff' #TODO: make dynamic and track
 
 def oauth2_authorize():
     flow = _oauth2_initFlow()
@@ -129,3 +125,6 @@ def create_user_token_from_oauth2_profile(profile, access_token):
     user_token = create_token(user.username, access_token, expiry)
     return user_token
 
+
+def oauth2_delete_tokens(request):
+    destroy_tokens(request.user.username)

@@ -17,7 +17,7 @@ from .models import create_token, userCanEmulate
 from .models import Token as AuthToken
 from .protocol.cas import cas_validateUser, cas_loginRedirect, get_cas_oauth_client
 from .protocol.globus import globus_logout, globus_authorize, globus_validate_code
-from .protocol.oauth2 import oauth2_authorize, oauth2_validate_code
+from .protocol.oauth2 import oauth2_authorize, oauth2_validate_code, oauth2_delete_tokens
 from .protocol.ldap import ldap_validate
 from .settings import auth_settings
 
@@ -313,5 +313,11 @@ def oauth2_callback_authorize(request):
     request.session['username'] = user_token.user.username
     request.session['access_token'] = user_token.key
     # Redirect to 'next'
+    next_url = request.session.get('next', '/application')
+    return HttpResponseRedirect(next_url)
+
+def oauth2_logout_redirect(request):
+    if request.user is not None:
+        oauth2_delete_tokens(request)
     next_url = request.session.get('next', '/application')
     return HttpResponseRedirect(next_url)
